@@ -31,24 +31,26 @@ st.title("📊 Monthly Business Development Appraisal")
 st.markdown("Fill in the employee monthly KPI performance below.")
 
 # ======================================================
-# LOAD CSV FROM GITHUB
+# LOAD CSV DIRECTLY FROM PROJECT FOLDER
 # ======================================================
 try:
+    # CSV file must be in same folder as app.py
     employee_data = pd.read_csv("employees.csv")
 
-    # Clean column names
+    # Clean spaces in column names
     employee_data.columns = employee_data.columns.str.strip()
 
     st.success("Employee data loaded successfully!")
 
     # ======================================================
-    # NAME DROPDOWN
+    # EMPLOYEE NAME DROPDOWN
     # ======================================================
     selected_employee = st.selectbox(
         "Select Employee Name",
         employee_data["Name"].dropna().unique()
     )
 
+    # Get selected employee row
     selected_row = employee_data[
         employee_data["Name"] == selected_employee
     ].iloc[0]
@@ -65,7 +67,7 @@ col1, col2, col3 = st.columns(3)
 with col1:
     employee_name = st.text_input(
         "Employee Name",
-        value=selected_employee if selected_employee else ""
+        value=selected_employee
     )
 
 with col2:
@@ -132,14 +134,15 @@ kpi_data = {
     ],
 
     "Weight (%)": [
-        10,10,15,10,10,10,10,5,5,5,5,5
+        10, 10, 15, 10, 10, 10,
+        10, 5, 5, 5, 5, 5
     ]
 }
 
 df = pd.DataFrame(kpi_data)
 
 # ======================================================
-# INPUT TABLE
+# KPI INPUT SECTION
 # ======================================================
 st.subheader("KPI Appraisal Scorecard")
 
@@ -151,6 +154,7 @@ for i in range(len(df)):
 
     col1, col2, col3, col4 = st.columns(4)
 
+    # TARGET
     with col1:
         target = st.number_input(
             f"Target - {i}",
@@ -158,13 +162,16 @@ for i in range(len(df)):
             key=f"target_{i}"
         )
 
-    # Get value from CSV automatically
+    # AUTO LOAD KPI VALUE FROM CSV
     default_actual = 0.0
 
-    if uploaded_file is not None:
-        if kpi_name in employee_data.columns:
+    if kpi_name in employee_data.columns:
+        try:
             default_actual = float(selected_row[kpi_name])
+        except:
+            default_actual = 0.0
 
+    # ACTUAL PERFORMANCE
     with col2:
         actual = st.number_input(
             f"Actual Performance - {i}",
@@ -173,10 +180,12 @@ for i in range(len(df)):
             key=f"actual_{i}"
         )
 
+    # WEIGHT
     with col3:
         weight = df.loc[i, "Weight (%)"]
         st.info(f"Weight: {weight}%")
 
+    # SCORE
     with col4:
 
         if target > 0:
@@ -260,4 +269,4 @@ st.download_button(
     data=csv,
     file_name=f"{employee_name}_{month}_appraisal.csv",
     mime="text/csv"
-    )
+)
