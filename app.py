@@ -21,13 +21,6 @@ st.markdown("""
 h1, h2, h3 {
     color: #1f2937;
 }
-
-.metric-box {
-    background: #f9fafb;
-    padding: 15px;
-    border-radius: 12px;
-    border: 1px solid #e5e7eb;
-}
 </style>
 """, unsafe_allow_html=True)
 
@@ -35,8 +28,52 @@ h1, h2, h3 {
 # TITLE
 # ======================================================
 st.title("📊 Monthly Business Development Appraisal")
-
 st.markdown("Fill in the employee monthly KPI performance below.")
+
+# ======================================================
+# CSV UPLOAD
+# ======================================================
+# ======================================================
+# LOAD CSV FROM GITHUB
+# ======================================================
+github_csv_url = "https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/data/employees.csv"
+
+try:
+    employee_data = pd.read_csv(github_csv_url)
+
+    # Clean column names
+    employee_data.columns = employee_data.columns.str.strip()
+
+    st.success("Employee data loaded from GitHub!")
+
+    # ======================================================
+    # NAME DROPDOWN
+    # ======================================================
+    selected_employee = st.selectbox(
+        "Select Employee Name",
+        employee_data["Name"].unique()
+    )
+
+    selected_row = employee_data[
+        employee_data["Name"] == selected_employee
+    ].iloc[0]
+
+except Exception as e:
+    st.error("Could not load employee CSV from GitHub.")
+    st.stop()
+
+# ======================================================
+# NAME DROPDOWN
+# ======================================================
+ if "Name" in employee_data.columns:
+    selected_employee = st.selectbox(
+        "Select Employee Name",
+            employee_data["Name"].unique()
+        )
+
+        selected_row = employee_data[
+            employee_data["Name"] == selected_employee
+        ].iloc[0]
 
 # ======================================================
 # EMPLOYEE DETAILS
@@ -44,7 +81,10 @@ st.markdown("Fill in the employee monthly KPI performance below.")
 col1, col2, col3 = st.columns(3)
 
 with col1:
-    employee_name = st.text_input("Employee Name")
+    employee_name = st.text_input(
+        "Employee Name",
+        value=selected_employee if selected_employee else ""
+    )
 
 with col2:
     employee_id = st.text_input("Employee ID")
@@ -83,14 +123,14 @@ kpi_data = {
         "Number of qualified leads generated",
         "New customers acquired",
         "Sales revenue achieved (₦)",
-        "Client conversion rate (Leads to Customers)",
+        "Client conversion rate",
         "Value of active pipeline (₦)",
         "Proposal to deal conversion rate",
         "Existing customer retention rate",
-        "Number of repeat business/customers",
-        "Number of new markets/accounts opened",
-        "Timely submission of sales reports",
-        "Feedback from internal departments",
+        "Number of repeat customers",
+        "New markets/accounts opened",
+        "Timely submission of reports",
+        "Feedback from departments",
         "Attendance, discipline & professionalism"
     ],
 
@@ -123,7 +163,9 @@ st.subheader("KPI Appraisal Scorecard")
 
 for i in range(len(df)):
 
-    st.markdown(f"### {df.loc[i, 'KPI Area']}")
+    kpi_name = df.loc[i, "KPI Area"]
+
+    st.markdown(f"### {kpi_name}")
 
     col1, col2, col3, col4 = st.columns(4)
 
@@ -134,11 +176,18 @@ for i in range(len(df)):
             key=f"target_{i}"
         )
 
+    # Get value from CSV automatically
+    default_actual = 0.0
+
+    if uploaded_file is not None:
+        if kpi_name in employee_data.columns:
+            default_actual = float(selected_row[kpi_name])
+
     with col2:
         actual = st.number_input(
             f"Actual Performance - {i}",
             min_value=0.0,
-            value=0.0,
+            value=default_actual,
             key=f"actual_{i}"
         )
 
@@ -155,7 +204,9 @@ for i in range(len(df)):
 
         achievement = min(achievement, 100)
 
-        weighted_score = (achievement * weight) / 100
+        weighted_score = (
+            achievement * weight
+        ) / 100
 
         st.success(f"Score: {weighted_score:.2f}")
 
@@ -173,7 +224,10 @@ st.subheader("Final Appraisal Score")
 col1, col2 = st.columns(2)
 
 with col1:
-    st.metric("Total Score", f"{total_score:.2f}%")
+    st.metric(
+        "Total Score",
+        f"{total_score:.2f}%"
+    )
 
 with col2:
 
@@ -188,23 +242,31 @@ with col2:
     else:
         rating = "Poor"
 
-    st.metric("Performance Rating", rating)
+    st.metric(
+        "Performance Rating",
+        rating
+    )
 
 # ======================================================
 # SUMMARY TABLE
 # ======================================================
 st.subheader("Appraisal Summary")
 
-summary_df = df[[
-    "KPI Area",
-    "KPI Measure",
-    "Target",
-    "Weight (%)",
-    "Actual Performance",
-    "Score"
-]]
+summary_df = df[
+    [
+        "KPI Area",
+        "KPI Measure",
+        "Target",
+        "Weight (%)",
+        "Actual Performance",
+        "Score"
+    ]
+]
 
-st.dataframe(summary_df, use_container_width=True)
+st.dataframe(
+    summary_df,
+    use_container_width=True
+)
 
 # ======================================================
 # DOWNLOAD REPORT
@@ -216,4 +278,4 @@ st.download_button(
     data=csv,
     file_name=f"{employee_name}_{month}_appraisal.csv",
     mime="text/csv"
-)
+        )
