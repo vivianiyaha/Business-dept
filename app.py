@@ -70,20 +70,6 @@ with col1:
         value=selected_employee
     )
 
-with col2:
-    employee_id = st.text_input("Employee ID")
-
-with col3:
-    month = st.selectbox(
-        "Appraisal Month",
-        [
-            "January", "February", "March",
-            "April", "May", "June",
-            "July", "August", "September",
-            "October", "November", "December"
-        ]
-    )
-
 # ======================================================
 # KPI DATA
 # ======================================================
