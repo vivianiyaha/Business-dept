@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import os
 
 # ======================================================
 # PAGE CONFIG
@@ -33,32 +34,67 @@ st.markdown("Fill in the employee monthly KPI performance below.")
 # ======================================================
 # LOAD CSV DIRECTLY FROM PROJECT FOLDER
 # ======================================================
+# ======================================================
+# SELECT CSV FILE FROM /data FOLDER
+# ======================================================
 try:
-    # CSV file must be in same folder as app.py
-    employee_data = pd.read_csv("employees.csv")
+    data_folder = "data"
+
+    # Get all csv files in data folder
+    csv_files = [
+        file for file in os.listdir(data_folder)
+        if file.endswith(".csv")
+    ]
+
+    if not csv_files:
+        st.error("No CSV files found in /data folder")
+        st.stop()
+
+    # Dropdown for CSV files
+    selected_csv = st.selectbox(
+        "Select CSV File",
+        csv_files
+    )
+
+    # Load selected CSV
+    csv_path = os.path.join(
+        data_folder,
+        selected_csv
+    )
+
+    employee_data = pd.read_csv(csv_path)
 
     # Clean spaces in column names
-    employee_data.columns = employee_data.columns.str.strip()
+    employee_data.columns = (
+        employee_data.columns
+        .str.strip()
+    )
 
-    st.success("Employee data loaded successfully!")
+    st.success(
+        f"Loaded: {selected_csv}"
+    )
 
     # ======================================================
     # EMPLOYEE NAME DROPDOWN
     # ======================================================
     selected_employee = st.selectbox(
         "Select Employee Name",
-        employee_data["Name"].dropna().unique()
+        employee_data["Name"]
+        .dropna()
+        .unique()
     )
 
     # Get selected employee row
     selected_row = employee_data[
-        employee_data["Name"] == selected_employee
+        employee_data["Name"]
+        == selected_employee
     ].iloc[0]
 
 except Exception as e:
-    st.error(f"Could not load employee CSV: {e}")
+    st.error(
+        f"Could not load employee CSV: {e}"
+    )
     st.stop()
-
 # ======================================================
 # EMPLOYEE DETAILS
 # ======================================================
