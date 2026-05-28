@@ -33,22 +33,20 @@ st.markdown("Fill in the employee monthly KPI performance below.")
 # ======================================================
 # LOAD CSV FROM GITHUB
 # ======================================================
-github_csv_url = "https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/data/employees.csv"
-
 try:
-    employee_data = pd.read_csv(github_csv_url)
+    employee_data = pd.read_csv("employees.csv")
 
     # Clean column names
     employee_data.columns = employee_data.columns.str.strip()
 
-    st.success("Employee data loaded from GitHub!")
+    st.success("Employee data loaded successfully!")
 
     # ======================================================
     # NAME DROPDOWN
     # ======================================================
     selected_employee = st.selectbox(
         "Select Employee Name",
-        employee_data["Name"].unique()
+        employee_data["Name"].dropna().unique()
     )
 
     selected_row = employee_data[
@@ -56,22 +54,8 @@ try:
     ].iloc[0]
 
 except Exception as e:
-    st.error("Could not load employee CSV from GitHub.")
+    st.error(f"Could not load employee CSV: {e}")
     st.stop()
-
-    # ======================================================
-    # NAME DROPDOWN
-    # ======================================================
-    if "Name" in employee_data.columns:
-
-        selected_employee = st.selectbox(
-            "Select Employee Name",
-            employee_data["Name"].unique()
-        )
-
-        selected_row = employee_data[
-            employee_data["Name"] == selected_employee
-        ].iloc[0]
 
 # ======================================================
 # EMPLOYEE DETAILS
