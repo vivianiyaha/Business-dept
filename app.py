@@ -32,15 +32,12 @@ st.title("📊 Monthly Business Development Appraisal")
 st.markdown("Fill in the employee monthly KPI performance below.")
 
 # ======================================================
-# LOAD CSV DIRECTLY FROM PROJECT FOLDER
-# ======================================================
-# ======================================================
 # SELECT CSV FILE FROM /data FOLDER
 # ======================================================
 try:
     data_folder = "data"
 
-    # Get all csv files in data folder
+    # Get all CSV files
     csv_files = [
         file for file in os.listdir(data_folder)
         if file.endswith(".csv")
@@ -50,7 +47,7 @@ try:
         st.error("No CSV files found in /data folder")
         st.stop()
 
-    # Dropdown for CSV files
+    # CSV Dropdown
     selected_csv = st.selectbox(
         "Select CSV File",
         csv_files
@@ -64,7 +61,7 @@ try:
 
     employee_data = pd.read_csv(csv_path)
 
-    # Clean spaces in column names
+    # Clean spaces in columns
     employee_data.columns = (
         employee_data.columns
         .str.strip()
@@ -84,7 +81,7 @@ try:
         .unique()
     )
 
-    # Get selected employee row
+    # Get selected employee data
     selected_row = employee_data[
         employee_data["Name"]
         == selected_employee
@@ -95,10 +92,11 @@ except Exception as e:
         f"Could not load employee CSV: {e}"
     )
     st.stop()
+
 # ======================================================
 # EMPLOYEE DETAILS
 # ======================================================
-col1, col2, col3 = st.columns(3)
+col1 = st.columns(1)[0]
 
 with col1:
     employee_name = st.text_input(
@@ -189,7 +187,9 @@ for i in range(len(df)):
 
     if kpi_name in employee_data.columns:
         try:
-            default_actual = float(selected_row[kpi_name])
+            default_actual = float(
+                selected_row[kpi_name]
+            )
         except:
             default_actual = 0.0
 
@@ -211,20 +211,34 @@ for i in range(len(df)):
     with col4:
 
         if target > 0:
-            achievement = (actual / target) * 100
+            achievement = (
+                actual / target
+            ) * 100
         else:
             achievement = 0
 
-        achievement = min(achievement, 100)
+        achievement = min(
+            achievement,
+            100
+        )
 
         weighted_score = (
             achievement * weight
         ) / 100
 
-        st.success(f"Score: {weighted_score:.2f}")
+        st.success(
+            f"Score: {weighted_score:.2f}"
+        )
 
-    df.loc[i, "Actual Performance"] = actual
-    df.loc[i, "Score"] = weighted_score
+    df.loc[
+        i,
+        "Actual Performance"
+    ] = actual
+
+    df.loc[
+        i,
+        "Score"
+    ] = weighted_score
 
 # ======================================================
 # FINAL SCORE
@@ -284,11 +298,13 @@ st.dataframe(
 # ======================================================
 # DOWNLOAD REPORT
 # ======================================================
-csv = summary_df.to_csv(index=False).encode("utf-8")
+csv = summary_df.to_csv(
+    index=False
+).encode("utf-8")
 
 st.download_button(
     label="📥 Download Appraisal Report",
     data=csv,
-    file_name=f"{employee_name}_{month}_appraisal.csv",
+    file_name=f"{employee_name}_appraisal.csv",
     mime="text/csv"
-)
+        )
