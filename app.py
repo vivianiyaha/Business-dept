@@ -31,25 +31,33 @@ st.title("📊 Monthly Business Development Appraisal")
 st.markdown("Fill in the employee monthly KPI performance below.")
 
 # ======================================================
-# CSV UPLOAD
+# LOAD CSV FROM GITHUB
 # ======================================================
-st.subheader("Upload Employee KPI CSV")
+github_csv_url = "https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/data/employees.csv"
 
-uploaded_file = st.file_uploader(
-    "Upload CSV File",
-    type=["csv"]
-)
-
-employee_data = None
-selected_employee = None
-
-if uploaded_file is not None:
-    employee_data = pd.read_csv(uploaded_file)
+try:
+    employee_data = pd.read_csv(github_csv_url)
 
     # Clean column names
     employee_data.columns = employee_data.columns.str.strip()
 
-    st.success("CSV uploaded successfully!")
+    st.success("Employee data loaded from GitHub!")
+
+    # ======================================================
+    # NAME DROPDOWN
+    # ======================================================
+    selected_employee = st.selectbox(
+        "Select Employee Name",
+        employee_data["Name"].unique()
+    )
+
+    selected_row = employee_data[
+        employee_data["Name"] == selected_employee
+    ].iloc[0]
+
+except Exception as e:
+    st.error("Could not load employee CSV from GitHub.")
+    st.stop()
 
     # ======================================================
     # NAME DROPDOWN
